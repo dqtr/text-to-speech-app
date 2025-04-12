@@ -9,20 +9,71 @@
 <body class="min-h-screen flex items-center justify-center">
   <div class="bg-white shadow-2xl rounded-2xl p-8 w-full max-w-lg text-center">
     <h1 class="text-3xl font-bold mb-6 text-blue-600">🎤 Text to Speech Converter</h1>
-    <form method="POST">
-      <textarea name="text" rows="5" class="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Enter your text here..."></textarea>
-      <button type="submit" class="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Convert</button>
-    </form>
 
-    {% if audio_file %}
-      <div class="mt-6">
-        <h2 class="text-lg font-semibold text-green-600">Conversion successful!</h2>
-        <audio controls class="mt-2 w-full">
-          <source src="{{ audio_file }}" type="audio/mp3" />
-        </audio>
-        <a href="{{ url_for('download', filename=audio_file.split('/')[-1]) }}" class="mt-4 inline-block text-blue-600 underline">⬇️ Download MP3</a>
-      </div>
-    {% endif %}
+    <textarea id="text-input" rows="5" class="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 mb-4" placeholder="Enter your text here..."></textarea>
+
+    <select id="voice" class="w-full mb-4 p-2 border rounded-md focus:ring-2 focus:ring-blue-400">
+      <option value="default">🌍 Default (en)</option>
+      <option value="us">🇺🇸 US English</option>
+      <option value="uk">🇬🇧 UK English</option>
+      <option value="india">🇮🇳 Indian English</option>
+      <option value="australia">🇦🇺 Australian English</option>
+    </select>
+
+    <button id="convert-btn" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition w-full">Convert</button>
+
+    <div id="progress-bar" class="w-full bg-gray-200 rounded-full h-4 mt-4 hidden">
+      <div class="bg-blue-600 h-4 rounded-full animate-pulse" style="width: 100%;"></div>
+    </div>
+
+    <div id="audio-container" class="mt-6 hidden">
+      <h2 class="text-lg font-semibold text-green-600">✅ Conversion complete!</h2>
+      <audio id="audio-player" controls class="mt-2 w-full"></audio>
+      <a id="download-link" class="mt-4 inline-block text-blue-600 underline">⬇️ Download MP3</a>
+    </div>
   </div>
+
+  <script>
+    const convertBtn = document.getElementById("convert-btn");
+    const textInput = document.getElementById("text-input");
+    const voiceSelect = document.getElementById("voice");
+    const progressBar = document.getElementById("progress-bar");
+    const audioContainer = document.getElementById("audio-container");
+    const audioPlayer = document.getElementById("audio-player");
+    const downloadLink = document.getElementById("download-link");
+
+    convertBtn.addEventListener("click", () => {
+      const text = textInput.value.trim();
+      const voice = voiceSelect.value;
+
+      if (!text) {
+        alert("Please enter some text.");
+        return;
+      }
+
+      progressBar.classList.remove("hidden");
+      audioContainer.classList.add("hidden");
+
+      fetch("/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, voice })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert("Error: " + data.error);
+        } else {
+          audioPlayer.src = data.audio_file;
+          downloadLink.href = `/download/${data.audio_file.split('/').pop()}`;
+          audioContainer.classList.remove("hidden");
+        }
+      })
+      .catch(err => alert("Something went wrong!"))
+      .finally(() => {
+        progressBar.classList.add("hidden");
+      });
+    });
+  </script>
 </body>
 </html>

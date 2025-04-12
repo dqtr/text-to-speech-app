@@ -1,21 +1,43 @@
-from flask import Flask, render_template, request, send_file
+from flask import Flask, render_template, request, send_file, jsonify
 from gtts import gTTS
 import os
 from uuid import uuid4
+import time
 
 app = Flask(__name__)
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/")
 def index():
-    audio_file = None
-    if request.method == "POST":
-        text = request.form["text"]
-        if text.strip():
-            tts = gTTS(text)
-            filename = f"static/{uuid4().hex}.mp3"
-            tts.save(filename)
-            audio_file = filename
-    return render_template("index.html", audio_file=audio_file)
+    return render_template("index.html")
+
+@app.route("/generate", methods=["POST"])
+def generate():
+    data = request.get_json()
+    text = data.get("text")
+    voice = data.get("voice")
+
+    if not text.strip():
+        return jsonify({"error": "Empty text"}), 400
+
+    lang_map = {
+        "default": "en",
+        "us": "en",
+        "uk": "en-uk",
+        "india": "en-in",
+        "australia": "en-au"
+    }
+
+    lang = lang_map.get(voice, "en")
+    filename = f"{uuid4().hex}.mp3"
+    filepath = f"static/{filename}"
+
+    try:
+        tts = gTTS(text=text, lang=lang)
+        tts.save(filepath)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    return jsonify({"audio_file": filepath})
 
 @app.route("/download/<filename>")
 def download(filename):
