@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text-to-Speech Web App</title>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 2em auto; padding: 1em; border: 1px solid #ccc; border-radius: 5px; }
+        label { display: block; margin-bottom: 0.5em; font-weight: bold; }
+        textarea { width: 100%; min-height: 100px; margin-bottom: 1em; padding: 0.5em; box-sizing: border-box; }
+        select { width: 100%; padding: 0.5em; margin-bottom: 1em; box-sizing: border-box; }
+        button { padding: 0.7em 1.5em; background-color: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        .download-link { margin-top: 1.5em; display: block; font-weight: bold; }
+        .error { color: red; margin-top: 1em; }
+    </style>
+</head>
+<body>
+    <h1>Text-to-Speech Converter</h1>
+
+    {% if error %}
+        <p class="error">Error: {{ error }}</p>
+    {% endif %}
+
+    <form method="POST" action="/synthesize">
+        <div>
+            <label for="text">Text to Convert:</label>
+            <textarea id="text" name="text" required>{{ text_input or '' }}</textarea>
+        </div>
+
+        <div>
+            <label for="voice">Choose Voice:</label>
+            <select id="voice" name="voice">
+                {% for voice in voices %}
+                    <option value="{{ voice.id }}" {% if voice.id == selected_voice_id %}selected{% endif %}>
+                        {{ voice.name }} ({{ voice.gender_guess }}, {{ voice.lang }})
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit">Generate Speech</button>
+    </form>
+
+    {% if audio_filename %}
+        <div class="download-section">
+            <h2>Download Audio</h2>
+            <p>Speech generated successfully!</p>
+            <audio controls>
+                <source src="{{ url_for('download_file', filename=audio_filename) }}" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+            <br>
+            <a href="{{ url_for('download_file', filename=audio_filename) }}" download class="download-link">
+                Download {{ audio_filename }}
+            </a>
+        </div>
+    {% endif %}
+
+</body>
+</html>
