@@ -1,61 +1,28 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="bg-gray-100">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text-to-Speech Web App</title>
-    <style>
-        body { font-family: sans-serif; max-width: 600px; margin: 2em auto; padding: 1em; border: 1px solid #ccc; border-radius: 5px; }
-        label { display: block; margin-bottom: 0.5em; font-weight: bold; }
-        textarea { width: 100%; min-height: 100px; margin-bottom: 1em; padding: 0.5em; box-sizing: border-box; }
-        select { width: 100%; padding: 0.5em; margin-bottom: 1em; box-sizing: border-box; }
-        button { padding: 0.7em 1.5em; background-color: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
-        button:hover { background-color: #0056b3; }
-        .download-link { margin-top: 1.5em; display: block; font-weight: bold; }
-        .error { color: red; margin-top: 1em; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Text to Speech</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <h1>Text-to-Speech Converter</h1>
-
-    {% if error %}
-        <p class="error">Error: {{ error }}</p>
-    {% endif %}
-
-    <form method="POST" action="/synthesize">
-        <div>
-            <label for="text">Text to Convert:</label>
-            <textarea id="text" name="text" required>{{ text_input or '' }}</textarea>
-        </div>
-
-        <div>
-            <label for="voice">Choose Voice:</label>
-            <select id="voice" name="voice">
-                {% for voice in voices %}
-                    <option value="{{ voice.id }}" {% if voice.id == selected_voice_id %}selected{% endif %}>
-                        {{ voice.name }} ({{ voice.gender_guess }}, {{ voice.lang }})
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <button type="submit">Generate Speech</button>
+<body class="min-h-screen flex items-center justify-center">
+  <div class="bg-white shadow-2xl rounded-2xl p-8 w-full max-w-lg text-center">
+    <h1 class="text-3xl font-bold mb-6 text-blue-600">🎤 Text to Speech Converter</h1>
+    <form method="POST">
+      <textarea name="text" rows="5" class="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Enter your text here..."></textarea>
+      <button type="submit" class="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Convert</button>
     </form>
 
-    {% if audio_filename %}
-        <div class="download-section">
-            <h2>Download Audio</h2>
-            <p>Speech generated successfully!</p>
-            <audio controls>
-                <source src="{{ url_for('download_file', filename=audio_filename) }}" type="audio/mpeg">
-                Your browser does not support the audio element.
-            </audio>
-            <br>
-            <a href="{{ url_for('download_file', filename=audio_filename) }}" download class="download-link">
-                Download {{ audio_filename }}
-            </a>
-        </div>
+    {% if audio_file %}
+      <div class="mt-6">
+        <h2 class="text-lg font-semibold text-green-600">Conversion successful!</h2>
+        <audio controls class="mt-2 w-full">
+          <source src="{{ audio_file }}" type="audio/mp3" />
+        </audio>
+        <a href="{{ url_for('download', filename=audio_file.split('/')[-1]) }}" class="mt-4 inline-block text-blue-600 underline">⬇️ Download MP3</a>
+      </div>
     {% endif %}
-
+  </div>
 </body>
 </html>
